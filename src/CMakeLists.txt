@@ -1,93 +1,64 @@
+# Tell CMake to run moc when necessary:
+set(CMAKE_AUTOMOC ON)
 
+# As moc files are generated in the binary dir, tell CMake
+# to always look for includes there:
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-SET(KIT_SRCS
+set(_SRCS
   qtbuttonpropertybrowser.cpp
-  qtbuttonpropertybrowser.h
   qteditorfactory.cpp
-  qteditorfactory.h
   qtgroupboxpropertybrowser.cpp
-  qtgroupboxpropertybrowser.h
   qtpropertybrowser.cpp
-  qtpropertybrowser.h
   qtpropertybrowserutils.cpp
-  qtpropertybrowserutils_p.h
   qtpropertymanager.cpp
-  qtpropertymanager.h
   qttreepropertybrowser.cpp
-  qttreepropertybrowser.h
   qtvariantproperty.cpp
-  qtvariantproperty.h
   )
 
-SET(KIT_MOC_SRCS
-  qtpropertybrowserutils_p.h
+file(GLOB _IMPL_HDRS *.h)
+file(GLOB _PUBLIC_HDRS Qt*)
+
+set(_UI_FORMS
   )
 
-SET(KIT_UI_FORMS
-  )
-
-SET(KIT_resources
+set(_RESOURCES
   qtpropertybrowser.qrc
   )
   
-INCLUDE_DIRECTORIES(
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR}
-  )
-  
-QT4_WRAP_UI(KIT_UI_CPP ${KIT_UI_FORMS})
-QT4_WRAP_CPP(KIT_MOC_CPP ${KIT_MOC_SRCS})
-QT4_ADD_RESOURCES(KIT_QRC_SRCS ${KIT_resources})
+QT5_WRAP_UI(_UI_SRCS ${_UI_FORMS})
+QT5_ADD_RESOURCES(_QRC_SRCS ${_RESOURCES})
 
-SET(libname ${PROJECT_NAME})
-ADD_LIBRARY(${libname} STATIC
-  ${KIT_SRCS}
-  ${KIT_UI_CPP}
-  ${KIT_MOC_CPP}
-  ${KIT_QRC_SRCS}
-  )
-  
-SET(${PROJECT_NAME}_LINK_LIBRARIES ${QT_LIBRARIES})
-TARGET_LINK_LIBRARIES(
-  ${libname}
-  ${${PROJECT_NAME}_LINK_LIBRARIES}
+set(TARGET_NAME ${PROJECT_NAME})
+
+add_library(${TARGET_NAME}
+  ${_SRCS}
+  ${_UI_SRCS}
+  ${_QRC_SRCS}
+  ${_IMPL_HDRS}
   )
 
-# List of header that should go though moc
-SET(KIT_HEADERS_MOC_SRCS
-  qtbuttonpropertybrowser.h
-  qteditorfactory.h
-  qtgroupboxpropertybrowser.h
-  qtpropertybrowser.h
-  qtpropertybrowserutils_p.h
-  qtpropertymanager.h
-  qttreepropertybrowser.h
-  qtvariantproperty.h
-  )
+target_link_libraries(${TARGET_NAME} Qt5::Widgets)
 
-SET(KIT_MOC_CPP)
-FOREACH(file ${KIT_HEADERS_MOC_SRCS})
-  get_filename_component(filename_we ${file} NAME_WE)
-  SET(output_file moc_${filename_we}.cpp)
-  QT4_GENERATE_MOC(${file} ${output_file})
-  LIST(APPEND KIT_MOC_CPP ${output_file})
-ENDFOREACH()
+######################### Installation Stuff ###########################
+include(GenerateExportHeader)
+generate_export_header(${TARGET_NAME})
 
-# List of cpp files that should go though moc
-SET(KIT_CPP_MOC_SRCS
-  qteditorfactory.cpp
-  qtpropertymanager.cpp
-  qttreepropertybrowser.cpp
-  )
+install(TARGETS ${TARGET_NAME}
+  EXPORT ${TARGET_NAME}Targets
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+  INCLUDES DESTINATION ${INSTALL_INCLUDE_DIR}
+)
 
-FOREACH(file ${KIT_CPP_MOC_SRCS})
-  get_filename_component(filename_we ${file} NAME_WE)
-  SET(output_file ${filename_we}.moc)
-  QT4_GENERATE_MOC(${file} ${output_file})
-  LIST(APPEND KIT_MOC_CPP ${output_file})
-ENDFOREACH()
+install(
+  FILES
+    ${_PUBLIC_HDRS}
+    ${_IMPL_HDRS}
+  DESTINATION
+    ${INSTALL_INCLUDE_DIR}
+  COMPONENT
+    Devel
+)
 
-add_custom_target(${libname}GenerateMoc
-  DEPENDS ${KIT_MOC_CPP}
-  )
-add_dependencies(${libname} ${libname}GenerateMoc)

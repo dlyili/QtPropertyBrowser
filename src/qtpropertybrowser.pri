@@ -23,8 +23,3 @@ qtpropertybrowser-uselib:!qtpropertybrowser-buildlib {
             $$PWD/qtpropertybrowserutils_p.h
     RESOURCES += $$PWD/qtpropertybrowser.qrc
 }
-
-win32 {
-    contains(TEMPLATE, lib):contains(CONFIG, shared):DEFINES += QT_QTPROPERTYBROWSER_EXPORT
-    else:qtpropertybrowser-uselib:DEFINES += QT_QTPROPERTYBROWSER_IMPORT
-}
